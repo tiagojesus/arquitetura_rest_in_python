@@ -1,0 +1,2 @@
+# Normaliza line endings para LF no repositório (ver .editorconfig)
+* text=auto eol=lf
