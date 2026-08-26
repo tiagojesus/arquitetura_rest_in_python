@@ -164,7 +164,35 @@ routes (HTTP) → services (negócio) → repositories (persistência) → model
 - **Paginação**: endpoints de listagem aceitam `skip`/`limit` (default
   `0`/`50`, `limit` máximo 100).
 
-## 6. Testes
+## 6. Princípios SOLID (obrigatórios)
+
+Todo código produzido pela IA DEVE respeitar os 5 princípios SOLID, aplicados
+à arquitetura em camadas deste projeto:
+
+- **S — Single Responsibility Principle**: cada módulo, classe ou função tem
+  uma única responsabilidade (uma única razão para mudar). Routes só tratam
+  HTTP, services só regra de negócio, repositories só persistência, models
+  só definição de tabela. Se o nome de uma função precisa de "e"
+  (`cria_e_notifica`), ela deve ser quebrada em duas.
+- **O — Open-Closed Principle**: código aberto para extensão, fechado para
+  modificação. Novo comportamento entra como nova classe/função/estratégia —
+  nunca como um `if`/`elif` a mais dentro de um service existente. Ex.: um
+  novo canal de notificação implementa a interface comum em vez de alterar o
+  service de envio.
+- **L — Liskov Substitution Principle**: implementações devem ser
+  substituíveis sem quebrar o contrato. Um repositório alternativo (ex.:
+  fake para testes) deve respeitar exatamente a mesma interface do real —
+  mesmas assinaturas, tipos de retorno e exceções de domínio.
+- **I — Interface Segregation Principle**: interfaces enxutas e específicas;
+  ninguém deve depender de métodos que não usa. A segregação dos schemas em
+  `Create`/`Update`/`Read` é aplicação direta deste princípio — mantê-la.
+- **D — Dependency Inversion Principle**: camadas superiores dependem de
+  abstrações, não de detalhes. Services recebem a sessão (e repositórios)
+  por parâmetro — injetados via `Depends` nas rotas — e nunca instanciam
+  engine/conexão diretamente. Configuração sempre via `Settings` injetável,
+  nunca lida de `os.environ` no meio do código.
+
+## 7. Testes
 
 - Framework: `pytest` (+ `httpx` para testes de API).
 - Toda spec só é considerada concluída com testes cobrindo o **caminho feliz**
@@ -172,12 +200,24 @@ routes (HTTP) → services (negócio) → repositories (persistência) → model
 - Testes de integração sobem com o Postgres de teste via docker-compose
   (serviço `db` na porta de testes ou banco `*_test`).
 
-## 7. Comandos padrão (Docker-first)
+## 8. Comandos padrão (Docker-first)
 
 > **Regra de ouro: toda tarefa do projeto roda dentro de containers.**
 > Não é necessário (nem recomendado) ter Python/uv instalados na máquina
 > hospedeira — apenas Docker e Docker Compose. O `uv` só é usado
 > **dentro** dos containers.
+
+> ⛔ **Docker indisponível = tarefa bloqueada.** Antes de qualquer tarefa,
+> a IA DEVE verificar que o Docker está funcionando (`docker info` ou
+> `docker compose version`). Se o Docker não estiver acessível (daemon
+> parado, comando não encontrado, erro de build), a IA DEVE:
+> 1. **Parar imediatamente** — não executar a tarefa de nenhuma outra forma
+>    (proibido usar Python/uv/pip local, sqlite ou qualquer workaround como
+>    substituto);
+> 2. **Avisar o usuário** explicitamente de que não está conseguindo
+>    utilizar o Docker, descrevendo o erro encontrado;
+> 3. **Aguardar** o usuário resolver o problema do Docker antes de
+>    continuar.
 
 ```bash
 # subir o ambiente completo (api + postgres, com hot-reload)
@@ -204,7 +244,7 @@ docker compose down            # mantém os dados do Postgres
 docker compose down -v         # apaga também o volume do banco
 ```
 
-## 8. O que a IA NUNCA deve fazer
+## 9. O que a IA NUNCA deve fazer
 
 1. Criar código fora do escopo de uma spec existente.
 2. Mudar a stack (ex.: trocar SQLModel por SQLAlchemy puro) sem nova spec.
@@ -212,3 +252,6 @@ docker compose down -v         # apaga também o volume do banco
 4. Hard-codar credenciais, URLs ou segredos.
 5. Ignorar falhas de teste ou desabilitar testes para "passar".
 6. Criar arquivos de documentação adicionais sem pedido explícito.
+7. Executar tarefas sem o Docker ou contornar a indisponibilidade dele com
+   alternativas locais — se o Docker não estiver funcionando, parar e avisar
+   o usuário (ver seção 8).
