@@ -7,3 +7,10 @@ __pycache__/
 
 # Env
 .env
+
+# Documentação do processo (não faz parte do código — ver AGENTS.md seção 2)
+.spec/
+.code_review/
+
+# Git
+.git/
