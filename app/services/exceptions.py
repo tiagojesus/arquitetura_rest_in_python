@@ -1,17 +1,58 @@
-"""Exceções de domínio levantadas pelos services.
+"""Exceções de domínio dos services.
 
-As rotas (ou handlers globais no main.py) convertem estas exceções em
-respostas HTTP com o status semanticamente correto.
+Estas exceções são levantadas pela camada de negócio e convertidas em
+HTTPException pelas rotas.
 """
 
 
 class DomainError(Exception):
-    """Erro genérico de regra de negócio."""
+    """Erro genérico de domínio / regra de negócio."""
+
+    def __init__(self, message: str = "Erro de domínio") -> None:
+        self.message = message
+        super().__init__(self.message)
 
 
-class NotFoundError(DomainError):
-    """Recurso não encontrado (mapeado para HTTP 404)."""
+class AuthenticationError(Exception):
+    """Credenciais inválidas ou token não autorizado."""
+
+    def __init__(self, message: str = "Credenciais inválidas") -> None:
+        self.message = message
+        super().__init__(self.message)
 
 
-class ConflictError(DomainError):
-    """Conflito de estado/unicidade (mapeado para HTTP 409)."""
+class InactiveUserError(Exception):
+    """Usuário existe mas está desativado."""
+
+    def __init__(self, message: str = "Usuário inativo") -> None:
+        self.message = message
+        super().__init__(self.message)
+
+
+class ConflictError(Exception):
+    """Conflito de dados (ex.: email ou nome já existente)."""
+
+    def __init__(self, message: str = "Conflito de dados") -> None:
+        self.message = message
+        super().__init__(self.message)
+
+
+class NotFoundError(Exception):
+    """Recurso não encontrado."""
+
+    def __init__(self, message: str = "Recurso não encontrado") -> None:
+        self.message = message
+        super().__init__(self.message)
+    """Credenciais inválidas ou token não autorizado."""
+
+    def __init__(self, message: str = "Credenciais inválidas") -> None:
+        self.message = message
+        super().__init__(self.message)
+
+
+class InactiveUserError(Exception):
+    """Usuário existe mas está desativado."""
+
+    def __init__(self, message: str = "Usuário inativo") -> None:
+        self.message = message
+        super().__init__(self.message)

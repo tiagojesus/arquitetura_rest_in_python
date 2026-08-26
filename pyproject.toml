@@ -10,6 +10,9 @@ dependencies = [
     "pydantic>=2.9",
     "pydantic-settings>=2.5",
     "psycopg[binary]>=3.2",
+    "pyjwt>=2.13.0",
+    "python-multipart>=0.0.32",
+    "passlib[bcrypt]>=1.7.4",
 ]
 
 [dependency-groups]

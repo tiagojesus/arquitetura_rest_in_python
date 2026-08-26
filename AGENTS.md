@@ -149,6 +149,7 @@ routes (HTTP) → services (negócio) → repositories (persistência) → model
   passar `encoding="utf-8"` explicitamente.
 - **Type hints obrigatórios** em todas as assinaturas de função/método.
 - **Docstrings** em português, estilo Google, em services e repositories.
+  https://google.github.io/styleguide/pyguide.html
 - **Nomes**: arquivos e módulos em `snake_case`; classes em `PascalCase`;
   rotas em kebab-case no path (`/itens-de-pedido`).
 - **Async**: usar `async def` em rotas, services e repositories sempre que

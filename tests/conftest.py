@@ -6,6 +6,8 @@ Postgres. Testes de integração contra o Postgres real rodam via
 docker-compose no ambiente de CI.
 """
 
+import os
+import tempfile
 from collections.abc import AsyncGenerator
 
 import pytest_asyncio
@@ -14,10 +16,13 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.seed import seed_admin_user
 from app.db import get_session
 from app.main import create_app
 
-test_engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+# Usa arquivo temporário para permitir múltiplas conexões no mesmo banco de teste
+_test_db_path = tempfile.mktemp(suffix=".db")
+test_engine = create_async_engine(f"sqlite+aiosqlite:///{_test_db_path}")
 test_session_factory = async_sessionmaker(
     test_engine, class_=AsyncSession, expire_on_commit=False
 )
@@ -34,6 +39,10 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
     async with test_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
+    # Executa seed no banco de teste
+    async with test_session_factory() as session:
+        await seed_admin_user(session)
+
     app = create_app()
     app.dependency_overrides[get_session] = override_get_session
 
@@ -45,3 +54,6 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
     app.dependency_overrides.clear()
     async with test_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
+    await test_engine.dispose()
+    if os.path.exists(_test_db_path):
+        os.remove(_test_db_path)

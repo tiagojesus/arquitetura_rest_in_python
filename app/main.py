@@ -9,7 +9,13 @@ from fastapi.responses import JSONResponse
 from app.api.routes import api_router
 from app.core.config import settings
 from app.db import init_db
-from app.services.exceptions import ConflictError, DomainError, NotFoundError
+from app.services.exceptions import (
+    AuthenticationError,
+    ConflictError,
+    DomainError,
+    InactiveUserError,
+    NotFoundError,
+)
 
 
 @asynccontextmanager
@@ -21,7 +27,20 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_app() -> FastAPI:
     """Constrói e configura a instância da aplicação."""
-    app = FastAPI(title=settings.app_name, debug=settings.debug, lifespan=lifespan)
+    docs_url = "/docs" if settings.docs_enabled else None
+    redoc_url = "/redoc" if settings.docs_enabled else None
+
+    app = FastAPI(
+        title=settings.app_name,
+        debug=settings.debug,
+        lifespan=lifespan,
+        docs_url=docs_url,
+        redoc_url=redoc_url,
+        swagger_ui_init_oauth={
+            "usePkceWithAuthorization": False,
+            "clientId": "swagger-ui",
+        },
+    )
 
     @app.exception_handler(NotFoundError)
     async def not_found_handler(_request: Request, exc: NotFoundError) -> JSONResponse:
@@ -33,6 +52,24 @@ def create_app() -> FastAPI:
     async def conflict_handler(_request: Request, exc: ConflictError) -> JSONResponse:
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT, content={"detail": str(exc)}
+        )
+
+    @app.exception_handler(AuthenticationError)
+    async def auth_error_handler(
+        _request: Request, exc: AuthenticationError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"detail": str(exc)},
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    @app.exception_handler(InactiveUserError)
+    async def inactive_user_handler(
+        _request: Request, exc: InactiveUserError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN, content={"detail": str(exc)}
         )
 
     @app.exception_handler(DomainError)
