@@ -21,9 +21,10 @@ class Settings(BaseSettings):
 
     # Documentação Swagger /docs
     docs_enabled: bool = True
-    secret_key: str = "super-secret-dev-key-change-immediately"
-    algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+
+    # Seed do usuário administrador (specs 02 e 03) — defaults apenas para dev
+    admin_email: str = "admin@local.dev"
+    admin_initial_password: str = "Admin0."
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

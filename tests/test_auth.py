@@ -3,8 +3,12 @@
 from datetime import UTC, datetime, timedelta
 
 from httpx import AsyncClient
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.config import settings
 from app.core.security import create_access_token
+from app.models.user import User
 from tests.conftest import test_engine, test_session_factory
 
 
@@ -16,7 +20,10 @@ async def test_seed_admin_login_com_sucesso(client: AsyncClient) -> None:
     """Verifica que o seed criou o usuário admin e ele consegue logar."""
     response = await client.post(
         "/auth/login",
-        data={"username": "admin", "password": "Admin0."},
+        data={
+            "username": settings.admin_email,
+            "password": settings.admin_initial_password,
+        },
     )
     assert response.status_code == 200
     body = response.json()
@@ -30,17 +37,18 @@ async def test_seed_admin_idempotente(client: AsyncClient) -> None:
     # Fazemos login com o admin para garantir que existe.
     response = await client.post(
         "/auth/login",
-        data={"username": "admin", "password": "Admin0."},
+        data={
+            "username": settings.admin_email,
+            "password": settings.admin_initial_password,
+        },
     )
     assert response.status_code == 200
 
     # Verifica diretamente no banco que existe apenas 1 admin
-    from sqlalchemy.ext.asyncio import AsyncSession
-    from sqlmodel import select
-    from app.models.user import User
-
     async with test_session_factory() as session:
-        result = await session.exec(select(User).where(User.email == "admin"))
+        result = await session.exec(
+            select(User).where(User.email == settings.admin_email)
+        )
         users = result.all()
         assert len(users) == 1
 
@@ -114,21 +122,14 @@ async def test_login_usuario_inativo_retorna_403(client: AsyncClient) -> None:
     )
 
     # Desativa o usuário diretamente no banco de teste
-    from sqlalchemy.ext.asyncio import async_sessionmaker
-    from sqlmodel import select
-    from sqlmodel.ext.asyncio.session import AsyncSession
-
-    from app.models.user import User
-
-    async with async_sessionmaker(
-        test_engine, class_=AsyncSession, expire_on_commit=False
-    )() as session:
+    async with AsyncSession(test_engine, expire_on_commit=False) as session:
         result = await session.exec(
             select(User).where(User.email == "inativo@exemplo.com")
         )
         user = result.first()
         assert user is not None
         user.is_active = False
+        session.add(user)
         await session.commit()
 
     response = await client.post(
@@ -217,9 +218,8 @@ async def test_last_login_at_atualizado_apos_login(client: AsyncClient) -> None:
     me1 = await client.get(
         "/auth/me", headers={"Authorization": f"Bearer {token1}"}
     )
-    last_login_1_str = me1.json()["last_login_at"]
     last_login_1 = datetime.fromisoformat(
-        last_login_1_str.replace("Z", "+00:00")
+        me1.json()["last_login_at"]
     ).replace(tzinfo=None)
 
     # Segundo login deve atualizar o timestamp
@@ -234,9 +234,8 @@ async def test_last_login_at_atualizado_apos_login(client: AsyncClient) -> None:
     me2 = await client.get(
         "/auth/me", headers={"Authorization": f"Bearer {token2}"}
     )
-    last_login_2_str = me2.json()["last_login_at"]
     last_login_2 = datetime.fromisoformat(
-        last_login_2_str.replace("Z", "+00:00")
+        me2.json()["last_login_at"]
     ).replace(tzinfo=None)
 
     assert last_login_1 <= last_login_2

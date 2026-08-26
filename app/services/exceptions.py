@@ -1,58 +1,43 @@
-"""Exceções de domínio dos services.
+"""Exceções de domínio levantadas pelos services.
 
-Estas exceções são levantadas pela camada de negócio e convertidas em
-HTTPException pelas rotas.
+As rotas (ou handlers globais no main.py) convertem estas exceções em
+respostas HTTP com o status semanticamente correto. Todas herdam de
+DomainError, permitindo captura genérica quando necessário (RN03 da
+spec 03).
 """
 
 
 class DomainError(Exception):
-    """Erro genérico de domínio / regra de negócio."""
+    """Erro genérico de regra de negócio (mapeado para HTTP 400)."""
 
     def __init__(self, message: str = "Erro de domínio") -> None:
         self.message = message
         super().__init__(self.message)
 
 
-class AuthenticationError(Exception):
-    """Credenciais inválidas ou token não autorizado."""
-
-    def __init__(self, message: str = "Credenciais inválidas") -> None:
-        self.message = message
-        super().__init__(self.message)
-
-
-class InactiveUserError(Exception):
-    """Usuário existe mas está desativado."""
-
-    def __init__(self, message: str = "Usuário inativo") -> None:
-        self.message = message
-        super().__init__(self.message)
-
-
-class ConflictError(Exception):
-    """Conflito de dados (ex.: email ou nome já existente)."""
-
-    def __init__(self, message: str = "Conflito de dados") -> None:
-        self.message = message
-        super().__init__(self.message)
-
-
-class NotFoundError(Exception):
-    """Recurso não encontrado."""
+class NotFoundError(DomainError):
+    """Recurso não encontrado (mapeado para HTTP 404)."""
 
     def __init__(self, message: str = "Recurso não encontrado") -> None:
-        self.message = message
-        super().__init__(self.message)
-    """Credenciais inválidas ou token não autorizado."""
+        super().__init__(message)
+
+
+class ConflictError(DomainError):
+    """Conflito de estado/unicidade (mapeado para HTTP 409)."""
+
+    def __init__(self, message: str = "Conflito de dados") -> None:
+        super().__init__(message)
+
+
+class AuthenticationError(DomainError):
+    """Credenciais inválidas ou token não autorizado (HTTP 401)."""
 
     def __init__(self, message: str = "Credenciais inválidas") -> None:
-        self.message = message
-        super().__init__(self.message)
+        super().__init__(message)
 
 
-class InactiveUserError(Exception):
-    """Usuário existe mas está desativado."""
+class InactiveUserError(DomainError):
+    """Usuário existe mas está desativado (mapeado para HTTP 403)."""
 
     def __init__(self, message: str = "Usuário inativo") -> None:
-        self.message = message
-        super().__init__(self.message)
+        super().__init__(message)

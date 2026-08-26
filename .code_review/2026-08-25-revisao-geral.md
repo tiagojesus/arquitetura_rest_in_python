@@ -105,4 +105,4 @@ A senha do admin deveria vir de variável de ambiente (ex.:
 
 ## 7. Plano de correção
 
-Convertido na spec `specs/03-correcoes-code-review.spec` (tarefas T01–T09).
+Convertido na spec `.spec/03-correcoes-code-review.spec` (tarefas T01–T09).

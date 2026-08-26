@@ -24,9 +24,14 @@ qualquer código e DEVE seguir todas as regras abaixo sem exceção.
 
 ## 2. Fluxo de trabalho orientado a specs
 
+> 📁 **Convenção de pastas de documentação:** pastas cujo nome começa com `.`
+> (como `.spec/` e `.code_review/`) contêm **documentação do processo**, não
+> código da aplicação. Nenhum código importável ou executável deve ser
+> colocado nelas, e elas nunca são copiadas para as imagens Docker.
+
 A IA **nunca escreve código sem uma spec**. O fluxo obrigatório é:
 
-1. **Ler a spec** em `specs/NN-nome-da-funcionalidade.spec`.
+1. **Ler a spec** em `.spec/NN-nome-da-funcionalidade.spec`.
 2. **Executar as tarefas** listadas na spec, na ordem, marcando cada uma como
    concluída (`[x]`) no próprio arquivo ao finalizar.
 3. **Validar**: rodar `docker compose up --build` e executar os testes
@@ -36,7 +41,7 @@ A IA **nunca escreve código sem uma spec**. O fluxo obrigatório é:
 
 ### Formato obrigatório de uma spec
 
-Arquivo: `specs/NN-nome-da-funcionalidade.spec` (NN = número sequencial com 2
+Arquivo: `.spec/NN-nome-da-funcionalidade.spec` (NN = número sequencial com 2
 dígitos, nome em kebab-case). Conteúdo em Markdown:
 
 ```markdown
@@ -75,9 +80,9 @@ Campos, tipos, constraints e relacionamentos.
 ```
 .
 ├── AGENTS.md                  # este arquivo — regras da IA
-├── specs/                     # especificações de funcionalidades
+├── .spec/                     # especificações de funcionalidades
 │   └── 00-crud-de-exemplo.spec
-├── code_review/               # histórico de code reviews (ver regra abaixo)
+├── .code_review/               # histórico de code reviews (ver regra abaixo)
 ├── app/
 │   ├── __init__.py
 │   ├── main.py                # factory da aplicação FastAPI
@@ -100,7 +105,7 @@ Campos, tipos, constraints e relacionamentos.
 
 ### Histórico de code reviews
 
-A pasta `code_review/` guarda o **histórico de todos os code reviews**
+A pasta `.code_review/` guarda o **histórico de todos os code reviews**
 realizados no projeto, para acompanhamento do progresso. Regras:
 
 - Todo code review realizado (pela IA ou por humano) DEVE ser registrado
@@ -109,7 +114,7 @@ realizados no projeto, para acompanhamento do progresso. Regras:
   (ex.: `2026-08-25-revisao-geral.md`).
 - O relatório deve conter: data, escopo, resumo executivo, problemas
   classificados por severidade (crítico/médio/menor), evidências objetivas
-  e o plano de correção (geralmente uma spec em `specs/`).
+  e o plano de correção (geralmente uma spec em `.spec/`).
 - Code review NUNCA implementa correções diretamente: os problemas
   encontrados viram tarefas em uma spec própria, que segue o fluxo normal
   (seção 2) após aprovação do usuário.

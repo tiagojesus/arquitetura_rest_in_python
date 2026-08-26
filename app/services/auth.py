@@ -14,7 +14,6 @@ from app.core.security import (
 )
 from app.models.user import User
 from app.repositories.user import UserRepository
-from app.schemas.auth import TokenPayload
 from app.schemas.user import UserCreate
 from app.services.exceptions import AuthenticationError, ConflictError, InactiveUserError
 

@@ -23,7 +23,7 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db() -> None:
-    """Cria as tabelas no banco e executa seeds.
+    """Cria as tabelas no banco e executa os seeds (RN01 da spec 03).
 
     Adequado para o estágio atual do projeto. Quando o esquema começar a
     evoluir em produção, adotar Alembic (via spec própria).
@@ -33,25 +33,3 @@ async def init_db() -> None:
 
     async with async_session_factory() as session:
         await seed_admin_user(session)
-
-engine = create_async_engine(settings.database_url, echo=settings.debug)
-
-async_session_factory = async_sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
-)
-
-
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Dependência FastAPI que fornece uma sessão de banco por request."""
-    async with async_session_factory() as session:
-        yield session
-
-
-async def init_db() -> None:
-    """Cria as tabelas no banco.
-
-    Adequado para o estágio atual do projeto. Quando o esquema começar a
-    evoluir em produção, adotar Alembic (via spec própria).
-    """
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)

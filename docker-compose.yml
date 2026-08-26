@@ -5,6 +5,7 @@ services:
       target: api # estágio enxuto: só deps de produção + app/
     image: rest_api:prod
     container_name: rest_api
+    env_file: .env # SECRET_KEY, ADMIN_*, DOCS_ENABLED etc.
     ports:
       - "8000:8000"
     environment:
@@ -46,6 +47,7 @@ services:
       - ./app:/code/app
       - ./tests:/code/tests
       - ./pyproject.toml:/code/pyproject.toml
+      - ./uv.lock:/code/uv.lock # persiste add/remove de dependências no host
     entrypoint: ["uv"]
 
   db:

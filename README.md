@@ -2,7 +2,7 @@
 
 API REST em camadas com **FastAPI + SQLModel + PostgreSQL**, empacotada com
 **Docker/Docker Compose** e gerenciada com **uv**. O desenvolvimento é
-orientado a specs em `specs/` — leia `AGENTS.md` antes de codificar.
+orientado a specs em `.spec/` — leia `AGENTS.md` antes de codificar.
 
 ## Subindo o ambiente
 
@@ -33,6 +33,6 @@ Ver `AGENTS.md` (seção 3) — arquitetura em camadas:
 
 ## Novas funcionalidades
 
-1. Crie `specs/NN-nome-da-funcionalidade.spec` seguindo o formato de
-   `specs/00-crud-de-exemplo.spec`.
+1. Crie `.spec/NN-nome-da-funcionalidade.spec` seguindo o formato de
+   `.spec/00-crud-de-exemplo.spec`.
 2. Entregue a spec à IA codificadora junto com `AGENTS.md`.
