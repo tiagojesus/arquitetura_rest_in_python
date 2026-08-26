@@ -77,6 +77,7 @@ Campos, tipos, constraints e relacionamentos.
 ├── AGENTS.md                  # este arquivo — regras da IA
 ├── specs/                     # especificações de funcionalidades
 │   └── 00-crud-de-exemplo.spec
+├── code_review/               # histórico de code reviews (ver regra abaixo)
 ├── app/
 │   ├── __init__.py
 │   ├── main.py                # factory da aplicação FastAPI
@@ -96,6 +97,22 @@ Campos, tipos, constraints e relacionamentos.
 ├── .env.example               # variáveis de ambiente (copiar para .env)
 └── README.md
 ```
+
+### Histórico de code reviews
+
+A pasta `code_review/` guarda o **histórico de todos os code reviews**
+realizados no projeto, para acompanhamento do progresso. Regras:
+
+- Todo code review realizado (pela IA ou por humano) DEVE ser registrado
+  nesta pasta como arquivo Markdown.
+- Nome do arquivo: `AAAA-MM-DD-titulo-curto.md`
+  (ex.: `2026-08-25-revisao-geral.md`).
+- O relatório deve conter: data, escopo, resumo executivo, problemas
+  classificados por severidade (crítico/médio/menor), evidências objetivas
+  e o plano de correção (geralmente uma spec em `specs/`).
+- Code review NUNCA implementa correções diretamente: os problemas
+  encontrados viram tarefas em uma spec própria, que segue o fluxo normal
+  (seção 2) após aprovação do usuário.
 
 ---
 
@@ -255,3 +272,6 @@ docker compose down -v         # apaga também o volume do banco
 7. Executar tarefas sem o Docker ou contornar a indisponibilidade dele com
    alternativas locais — se o Docker não estiver funcionando, parar e avisar
    o usuário (ver seção 8).
+8. Executar `git push` sem permissão explícita do usuário. Commits locais
+   são permitidos quando fizerem parte da tarefa, mas o push para o remoto
+   só acontece após o usuário autorizar de forma explícita.
