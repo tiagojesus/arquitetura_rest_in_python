@@ -1,6 +1,9 @@
 services:
   api:
-    build: .
+    build:
+      context: .
+      target: api # estágio enxuto: só deps de produção + app/
+    image: rest_api:prod
     container_name: rest_api
     ports:
       - "8000:8000"
@@ -17,7 +20,10 @@ services:
     restart: unless-stopped
 
   tests:
-    build: .
+    build:
+      context: .
+      target: dev # estágio com deps de dev; compartilhado com o serviço tools
+    image: rest_api:dev
     container_name: rest_api_tests
     profiles: ["tests"]
     environment:
@@ -31,7 +37,10 @@ services:
     command: pytest -v
 
   tools:
-    build: .
+    build:
+      context: .
+      target: dev # mesma imagem de `tests` — build acontece uma única vez
+    image: rest_api:dev
     profiles: ["tools"]
     volumes:
       - ./app:/code/app

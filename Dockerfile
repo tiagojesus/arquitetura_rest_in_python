@@ -1,25 +1,58 @@
-FROM python:3.12-slim
+# syntax=docker/dockerfile:1
+# Dockerfile multi-stage — ver AGENTS.md (Docker-first).
+#
+# Estágios:
+#   base  → imagem Python + uv + env UTF-8 (compartilhada por todos)
+#   deps  → dependências de produção (camada cacheada: só rebuilda se
+#           pyproject.toml/uv.lock mudarem)
+#   dev   → deps + dependências de dev + código + testes (targets: dev)
+#   api   → deps + código, imagem enxuta de produção (target: api)
+#
+# Builds usam cache mount do uv (BuildKit): pacotes baixados são reaproveitados
+# entre builds, reduzindo drasticamente o tempo de rebuild.
 
-# Instala o uv a partir da imagem oficial
-COPY --from=ghcr.io/astral-sh/uv:0.8 /uv /uvx /bin/
+FROM python:3.12-slim AS base
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONUTF8=1 \
+    PYTHONIOENCODING=utf-8
 
 WORKDIR /code
 
-# Copia só os manifests primeiro para aproveitar cache de camadas
-COPY pyproject.toml uv.lock* ./
+# uv copiado da imagem oficial (pin de versão para builds reproduzíveis)
+COPY --from=ghcr.io/astral-sh/uv:0.8 /uv /uvx /bin/
 
-# Instala dependências (incluindo dev) sem instalar o projeto em si
-RUN uv sync --no-install-project
+# ---------------------------------------------------------------------------
+FROM base AS deps
 
-# Código da aplicação
+# Só os manifests: enquanto eles não mudarem, esta camada (e as seguintes)
+# saem do cache, mesmo com o código da aplicação alterado.
+COPY pyproject.toml uv.lock ./
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project --no-dev
+
+# ---------------------------------------------------------------------------
+FROM deps AS dev
+
+# Dependências de desenvolvimento (pytest, ruff, etc.) por cima das de prod
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project
+
 COPY app ./app
 COPY tests ./tests
 
 ENV PATH="/code/.venv/bin:$PATH"
 
-# Força UTF-8 em todo I/O do Python (independente do locale do container)
-ENV PYTHONUTF8=1 \
-    PYTHONIOENCODING=utf-8
+# Usado pelos serviços `tests` e `tools` do docker-compose
+CMD ["pytest", "-v"]
+
+# ---------------------------------------------------------------------------
+FROM deps AS api
+
+COPY app ./app
+
+ENV PATH="/code/.venv/bin:$PATH"
 
 EXPOSE 8000
 
